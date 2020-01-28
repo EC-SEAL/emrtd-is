@@ -11,7 +11,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @SpringBootApplication
 @EnableSwagger2
 @ComponentScan(basePackages = { "eu.seal.is", "eu.seal.is.api" , "eu.seal.is.config"})
-public class Swagger2SpringBoot implements CommandLineRunner {
+public class EmrtdIs2SpringBoot implements CommandLineRunner {
 
     @Override
     public void run(String... arg0) throws Exception {
@@ -21,7 +21,7 @@ public class Swagger2SpringBoot implements CommandLineRunner {
     }
 
     public static void main(String[] args) throws Exception {
-        new SpringApplication(Swagger2SpringBoot.class).run(args);
+        new SpringApplication(EmrtdIs2SpringBoot.class).run(args);
     }
 
     class ExitException extends RuntimeException implements ExitCodeGenerator {
