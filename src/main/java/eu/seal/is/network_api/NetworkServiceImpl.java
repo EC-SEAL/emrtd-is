@@ -328,8 +328,8 @@ public class NetworkServiceImpl implements NetworkService
             addHeaders(headers, host, date, digestBytes, uri, requestId);
 
         } catch (IOException | KeyStoreException | NoSuchAlgorithmException | UnrecoverableKeyException e) {
-            LOG.error("could not generate signature!!");
-            LOG.error(e.getMessage());
+            //LOG.error("could not generate signature!!");
+            //LOG.error(e.getMessage());
         }
         
         //LOG.info ("Signature added.");
@@ -344,7 +344,7 @@ public class NetworkServiceImpl implements NetworkService
             //LOG.info ("After postForEntity: "  + response);
             return response.getBody();
         } catch (RestClientException e) {
-            LOG.info("request failed will retry");
+            //LOG.info("request failed will retry");
             if (attempt < 2) {
                 return sendPostFormSMResponse(hostUrl, uri,
                         					  urlParameters, attempt + 1);

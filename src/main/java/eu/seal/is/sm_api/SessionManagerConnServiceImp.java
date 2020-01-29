@@ -95,7 +95,7 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 		if (myLGW != null)
         	sender = myLGW.getMicroservice().get(0);
         else {
-        	sender = "ISms001";
+        	sender = "CLms001";
         	log.error("HARDCODED sender! "+ sender);
 		}
         
@@ -209,7 +209,9 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 	   
 	    //System.out.println("Enviando validateToken :"+token);
 	    //response = network.sendGet(hostURL, service, urlParameters);
-	    smResponse = network.sendGetSMResponse(hostURL, service, urlParameters, 1);
+	    smResponse = network.sendGetSMResponse(hostURL, service, urlParameters, 1);	    
+	    
+	    //log.info("validateToken smResponse:"+smResponse);
 	    
 	    if ( smResponse.getCode()==CodeEnum.OK)
 	    {

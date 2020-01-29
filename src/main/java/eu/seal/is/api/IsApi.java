@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import javax.validation.Valid;
 import javax.validation.constraints.*;
 import java.util.List;
@@ -24,6 +25,16 @@ import java.util.List;
 
 @Api(value = "is", description = "the is API")
 public interface IsApi {
+	
+	@ApiOperation(value = "FOR TESTING: Returns a token from SM", nickname = "isToken", notes = "FOR TESTING: Returns a token from SM", tags={ "IdentitySource", })
+    @ApiResponses(value = { 
+        @ApiResponse(code = 200, message = "Request admitted"),
+        @ApiResponse(code = 400, message = "Bad request"),
+        @ApiResponse(code = 401, message = "Not authorised") })
+    @RequestMapping(value = "/is/token",
+        produces = { "application/x-www-form-urlencoded" },
+        method = RequestMethod.GET)
+	ResponseEntity<String> isToken();
 
     @ApiOperation(value = "Passively provide trusted identity data from a trusted source to the identity source module. Can be used to implement a callback interface", nickname = "isLoadPost", notes = "_", tags={ "IdentitySource", })
     @ApiResponses(value = { 
