@@ -18,9 +18,7 @@ import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -29,6 +27,7 @@ import eu.seal.is.model.AttributeType;
 import eu.seal.is.model.DataStore;
 import eu.seal.is.model.EntityMetadata;
 import eu.seal.is.sm_api.SessionManagerConnService;
+import eu.seal.is.model.DataSet;
 
 @Service
 public class IsLoadPostServiceImp implements IsLoadPostService{
@@ -38,11 +37,18 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 	
 	@Override
 	public void loadPost (String sessionId, String dataset, SessionManagerConnService smConn) throws Exception {
-    // dataset: #B64  $ref: '#/definitions/dataSet'
+    
 		
 		try {
 			// MOCKING
 			mocking (sessionId, smConn);
+			
+			// dataset: #B64  $ref: '#/definitions/dataSet'
+			byte[] array = dataset.getBytes("UTF8");
+			String datasetString = new String(array, "UTF8");
+			
+			log.info("Dataset to be loaded: " + datasetString);
+			DataSet newDataSet = (new ObjectMapper()).readValue(datasetString.toString(),DataSet.class);
 						
 			// Get sessionData from SM
 			// Reading apRequest, apMetadata, dataStore
@@ -51,14 +57,32 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			Object objApmetadata = smConn.readVariable(sessionId, "apMetadata");
 			Object objDatastore = smConn.readVariable(sessionId, "dataStore");
 			
+			
 			log.info("apRequest, apMetadata, dataStore just read.");
 			
 			if (objAprequest != null) {
 			// TODO: Some checkings to do before updating: dataSet in the apRequest	
 				
 				// Append dataset to dataStore
-				// TODO
 				DataStore dataStore = new DataStore();
+				
+				List<DataSet> dsList = new ArrayList<DataSet> ();
+				String dataStoreString = (String) objDatastore;
+                if (!dataStoreString.isEmpty()) {
+                	dataStore = (new ObjectMapper()).readValue(objDatastore.toString(),DataStore.class);
+                    
+                	List <DataSet> OldDataSet = dataStore.getClearData();                   
+                    for (DataSet dataSet: OldDataSet)                 
+                        dsList.add(dataSet);
+                    
+                } else {
+                    String dsId = UUID.randomUUID().toString();
+                    dataStore.setId(dsId);
+                }
+                
+                // Adding the dataset from the received parameter               
+                dsList.add(newDataSet);
+                dataStore.setClearData(dsList);
 				
 				try
 				{

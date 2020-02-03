@@ -3,6 +3,7 @@ package eu.seal.is.api;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.seal.is.api.services.IsLoadPostService;
+import eu.seal.is.model.DataSet;
 import eu.seal.is.sm_api.SessionManagerConnService;
 import io.swagger.annotations.*;
 import org.slf4j.Logger;
@@ -24,7 +25,9 @@ import javax.validation.constraints.*;
 import javax.validation.Valid;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.Base64;
+import java.util.UUID;
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2020-01-20T11:14:25.775Z")
 
 @Controller
@@ -60,7 +63,22 @@ public class IsApiController implements IsApi {
         		if (sessionId != "") {
     	        // msToken validated
         		
-	        		isLoadPostService.loadPost (sessionId, dataset, smConn);
+        			// TESTING
+        			DataSet myDataset = new DataSet();
+        			myDataset.setId("DATASET__" + UUID.randomUUID().toString());     			
+        			myDataset.setLoa("loa TEST");
+                    myDataset.setIssued("issued TEST");
+                    myDataset.setIssuerId("eMRTD issuerId TEST");
+                    myDataset.setType("eMRTD type TEST");
+                    	
+        			String myDatasetStr = myDataset.toString();
+        			log.info("Before encoding: "+ myDatasetStr);     			
+        			String encodedBytes = Base64.getEncoder().encodeToString(myDatasetStr.getBytes());
+       			
+        			isLoadPostService.loadPost (sessionId, encodedBytes, smConn);
+        			// END TESTING
+        			
+	        		//isLoadPostService.loadPost (sessionId, dataset, smConn);
 	        		
 	                return new ResponseEntity<Void>(HttpStatus.OK);
         		}
@@ -108,41 +126,5 @@ public class IsApiController implements IsApi {
     	return new ResponseEntity<String>(msToken, HttpStatus.OK);
     }
     
-//    private String load(String msToken)
-//    {
-//    	// Revisar token recibido
-//		//				 
-//		if (msToken.endsWith("="))
-//		{
-//			msToken = msToken.replace("=", "");
-//		}
-//		if (msToken.startsWith("msToken="))
-//		{
-//			msToken = msToken.replace("msToken=", "");
-//		}
-//		log.info("***after:<"+msToken+">");
-//		
-//		// Antes de empezar compruebo que tengo los datos del CM rellenos si no es así lo relleno
-//		//fillCMData();
-//		
-//		
-//		//           Llamar al servicio de SessionManager(SM) /validateToken con el msToken
-//		// 		     Obtener de SessionManagerResponse el sessionId -> se hace en SessionManagerConnService
-//		String sessionId="";
-//		try
-//		{
-//			//sessionId = smConnService.validateToken( msToken);
-//		}
-//		catch (Exception ex)
-//		{
-//			String errorMsg= "Exception calling SM (validateToken) with token:"+msToken+"\n";
-//			errorMsg += "Exception message:"+ex.getMessage()+"\n";
-//			//model.addAttribute("ErrorMessage",errorMsg);
-//	        System.out.println("Devuelvo error "+errorMsg);
-//	        
-//	        return "acmError";
-//		}
-//    	return "";
-//    }
 
 }
