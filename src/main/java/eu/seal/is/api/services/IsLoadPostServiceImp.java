@@ -14,6 +14,7 @@ See README file for the full disclaimer information and LICENSE file for full li
 */
 package eu.seal.is.api.services;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.slf4j.Logger;
@@ -44,11 +45,42 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			mocking (sessionId, smConn);
 			
 			// dataset: #B64  $ref: '#/definitions/dataSet'
-			byte[] array = dataset.getBytes("UTF8");
-			String datasetString = new String(array, "UTF8");
 			
-			log.info("Dataset to be loaded: " + datasetString);
-			DataSet newDataSet = (new ObjectMapper()).readValue(datasetString.toString(),DataSet.class);
+			byte[] decodedBytes = Base64.getDecoder().decode(dataset);
+			String datasetString = new String(decodedBytes);
+			
+			//log.info("Before decoding: " + dataset);
+			log.info("Dataset to be loaded: " + datasetString );
+			DataSet newDataSet = (new ObjectMapper()).readValue(datasetString,DataSet.class);
+			
+			// TODO: the eMRTD IS will receive the dataSet and check that the signature 
+			// of it matches the signature received (using same signing algorithm as does on the app:
+			// the eMRTD app will read the ePassport and load the data into a dataSet and will sign the whole dataSet  
+			
+			// Which signing algorithms are to be used? TO BE DECIDED 04.02.2020 Raquel, Ross
+			String theSignAlorithm = null;
+			String thePublicKey = null;
+			Map<String, String> theProperties = newDataSet.getProperties();
+			for (Map.Entry<String, String> entry : theProperties.entrySet()) {
+			 
+				if (entry.getKey().equals("sigAlgorithm"))
+					theSignAlorithm = entry.getValue();
+				if (entry.getKey().equals("publicKey"))
+					thePublicKey = entry.getValue();
+			}
+			
+			if (thePublicKey != null  && !thePublicKey.isEmpty() &&
+				theSignAlorithm != null  && !theSignAlorithm.isEmpty()	) {
+				
+				log.info("thePublicKey: " + thePublicKey);
+				log.info("theSignAlorithm: " + theSignAlorithm);
+				
+				// TODO: check the SIGNED dataset received
+				
+			}
+			else
+				throw new Exception("Missing signature information.");
+			
 						
 			// Get sessionData from SM
 			// Reading apRequest, apMetadata, dataStore
@@ -61,7 +93,7 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			log.info("apRequest, apMetadata, dataStore just read.");
 			
 			if (objAprequest != null) {
-			// TODO: Some checkings to do before updating: dataSet in the apRequest	
+			// TODO: Some checkings to do before updating: dataSet in the apRequest		
 				
 				// Append dataset to dataStore
 				DataStore dataStore = new DataStore();
@@ -71,9 +103,10 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
                 if (!dataStoreString.isEmpty()) {
                 	dataStore = (new ObjectMapper()).readValue(objDatastore.toString(),DataStore.class);
                     
-                	List <DataSet> OldDataSet = dataStore.getClearData();                   
-                    for (DataSet dataSet: OldDataSet)                 
-                        dsList.add(dataSet);
+                	List <DataSet> OldDataSetList = dataStore.getClearData();  
+                	if (OldDataSetList!= null && !OldDataSetList.isEmpty())
+	                    for (DataSet dataSet: OldDataSetList)                 
+	                        dsList.add(dataSet);
                     
                 } else {
                     String dsId = UUID.randomUUID().toString();
@@ -83,6 +116,8 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
                 // Adding the dataset from the received parameter               
                 dsList.add(newDataSet);
                 dataStore.setClearData(dsList);
+                
+                log.info("new dataStore: " + dataStore.toString());
 				
 				try
 				{
@@ -164,7 +199,21 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 		datastore.setSignature(null);
 		datastore.setSignatureAlgorithm(null);	
 		
-		datastore.setClearData(null);
+		
+		DataSet dataSet = new DataSet();
+        dataSet.setId("DATASET__" + UUID.randomUUID().toString());
+        dataSet.setLoa("loa loa");
+        dataSet.setIssued("issued issued");
+        dataSet.setIssuerId("eIDAS issuer id");
+        dataSet.setType("eIDAS type");
+        Date date = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE, d MMM YYYY HH:mm:ss z", Locale.US);
+        formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+        String nowDate = formatter.format(date);
+        dataSet.setIssued(nowDate);
+        List<DataSet> dsList = new ArrayList<DataSet> ();
+        dsList.add(dataSet);
+        datastore.setClearData(dsList);
 		
 		ObjectMapper objDatastore3 = new ObjectMapper();
 		smConn.updateVariable(sessionId, "dataStore",objDatastore3.writeValueAsString(datastore));

@@ -2,6 +2,7 @@ package eu.seal.is.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.google.gson.Gson;
 import eu.seal.is.api.services.IsLoadPostService;
 import eu.seal.is.model.DataSet;
 import eu.seal.is.sm_api.SessionManagerConnService;
@@ -27,6 +28,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 @javax.annotation.Generated(value = "io.swagger.codegen.languages.SpringCodegen", date = "2020-01-20T11:14:25.775Z")
 
@@ -70,12 +73,24 @@ public class IsApiController implements IsApi {
                     myDataset.setIssued("issued TEST");
                     myDataset.setIssuerId("eMRTD issuerId TEST");
                     myDataset.setType("eMRTD type TEST");
+                    
+                    // TODO
+                    Map <String, String> myProperties = new HashMap<>();
+                    myProperties.put ("sigAlgorithm", "THIS_IS_THE_ALGORITHM_USED");
+                    myProperties.put ("publicKey", "THIS_IS_THE_PUBLIC_KEY");
+                    myDataset.setProperties(myProperties);
+                    // TODO: sign myDataset
                     	
         			String myDatasetStr = myDataset.toString();
-        			log.info("Before encoding: "+ myDatasetStr);     			
-        			String encodedBytes = Base64.getEncoder().encodeToString(myDatasetStr.getBytes());
+        			log.info("Before encoding: myDatasetStr"+ myDatasetStr);     			
+        			
+        			Gson gson = new Gson();
+        			String jsonMyDataset = gson.toJson(myDataset);
+        			log.info("Before encoding jsonMyDataset: "+ jsonMyDataset);     			
+        			String encodedDataset = Base64.getEncoder().encodeToString(jsonMyDataset.getBytes());
+        			
        			
-        			isLoadPostService.loadPost (sessionId, encodedBytes, smConn);
+        			isLoadPostService.loadPost (sessionId, encodedDataset, smConn);
         			// END TESTING
         			
 	        		//isLoadPostService.loadPost (sessionId, dataset, smConn);
