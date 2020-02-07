@@ -66,7 +66,7 @@ public class IsApiController implements IsApi {
         		if (sessionId != "") {
     	        // msToken validated
         		
-        			// TESTING
+// WHILE TESTING
         			DataSet myDataset = new DataSet();
         			myDataset.setId("DATASET__" + UUID.randomUUID().toString());     			
         			myDataset.setLoa("loa TEST");
@@ -74,12 +74,11 @@ public class IsApiController implements IsApi {
                     myDataset.setIssuerId("eMRTD issuerId TEST");
                     myDataset.setType("eMRTD type TEST");
                     
-                    // TODO
                     Map <String, String> myProperties = new HashMap<>();
-                    myProperties.put ("sigAlgorithm", "THIS_IS_THE_ALGORITHM_USED");
-                    myProperties.put ("publicKey", "THIS_IS_THE_PUBLIC_KEY");
+                    myProperties.put ("sigAlgorithm", "SHA256withRSA");
+                    myProperties.put ("signature", "THIS_IS_THE_SIGNATURE");
                     myDataset.setProperties(myProperties);
-                    // TODO: sign myDataset
+                    // Adding a mock signature later in the Service ...
                     	
         			String myDatasetStr = myDataset.toString();
         			log.info("Before encoding: myDatasetStr"+ myDatasetStr);     			
@@ -91,7 +90,7 @@ public class IsApiController implements IsApi {
         			
        			
         			isLoadPostService.loadPost (sessionId, encodedDataset, smConn);
-        			// END TESTING
+// END TESTING
         			
 	        		//isLoadPostService.loadPost (sessionId, dataset, smConn);
 	        		

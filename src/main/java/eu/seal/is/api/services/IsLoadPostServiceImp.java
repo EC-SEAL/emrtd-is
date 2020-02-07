@@ -30,6 +30,10 @@ import eu.seal.is.model.EntityMetadata;
 import eu.seal.is.sm_api.SessionManagerConnService;
 import eu.seal.is.model.DataSet;
 
+import java.security.*;
+import java.util.Base64;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 @Service
 public class IsLoadPostServiceImp implements IsLoadPostService{
 
@@ -57,25 +61,42 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			// of it matches the signature received (using same signing algorithm as does on the app:
 			// the eMRTD app will read the ePassport and load the data into a dataSet and will sign the whole dataSet  
 			
-			// Which signing algorithms are to be used? TO BE DECIDED 04.02.2020 Raquel, Ross
-			String theSignAlorithm = null;
-			String thePublicKey = null;
+			// Which signing algorithms are to be used? "SHA256withRSA" by the moment
+			
+			String theSignAlgorithm = null;
+			String theSignature = null;
+			PublicKey thePublicKey = null;
 			Map<String, String> theProperties = newDataSet.getProperties();
 			for (Map.Entry<String, String> entry : theProperties.entrySet()) {
 			 
 				if (entry.getKey().equals("sigAlgorithm"))
-					theSignAlorithm = entry.getValue();
-				if (entry.getKey().equals("publicKey"))
-					thePublicKey = entry.getValue();
+					theSignAlgorithm = entry.getValue();
+				if (entry.getKey().equals("signature"))
+					theSignature = entry.getValue();
+				
+// TODO: Retrieve from an ENVIRONMENT VARIABLE.
+//				thePublicKey = ...
 			}
 			
-			if (thePublicKey != null  && !thePublicKey.isEmpty() &&
-				theSignAlorithm != null  && !theSignAlorithm.isEmpty()	) {
+// WHILE TESTING 
+			thePublicKey = generateKeyPair().getPublic();
+			
+			if (thePublicKey != null  &&
+				theSignAlgorithm != null  && !theSignAlgorithm.isEmpty() &&
+				theSignature != null  && !theSignature.isEmpty()) {
 				
 				log.info("thePublicKey: " + thePublicKey);
-				log.info("theSignAlorithm: " + theSignAlorithm);
+				log.info("theSignAlgorithm: " + theSignAlgorithm);
+				log.info("theSignature: " + theSignature);
 				
-				// TODO: check the SIGNED dataset received
+				// Check the SIGNED dataset received
+				if (theSignAlgorithm.equals ("SHA256withRSA")) { 
+					//if (!verify(dataset, theSignature, thePublicKey))
+					// or datasetString?
+					if (!signingAndValidatingMock (datasetString))  // SIGNATURE MOCKED
+						throw new Exception("Invalid signature");
+				} else
+					throw new Exception("Sign algorithm not implemented.");
 				
 			}
 			else
@@ -227,6 +248,57 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 		}
 		
 	}
+	
+	
+	// https://gist.github.com/nielsutrecht/855f3bef0cf559d8d23e94e2aecd4ede
+	private static boolean verify(String plainText, String signature, PublicKey publicKey) throws Exception {
+        Signature publicSignature = Signature.getInstance("SHA256withRSA");
+        publicSignature.initVerify(publicKey);
+        publicSignature.update(plainText.getBytes(UTF_8));
+
+        byte[] signatureBytes = Base64.getDecoder().decode(signature);
+
+        return publicSignature.verify(signatureBytes);
+    }
+	
+	//
+	// USED FOR TESTING
+	//
+	private static KeyPair generateKeyPair() throws Exception {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048, new SecureRandom());
+        KeyPair pair = generator.generateKeyPair();
+
+        return pair;
+    }
+	
+	private static String sign(String plainText, PrivateKey privateKey) throws Exception {
+        Signature privateSignature = Signature.getInstance("SHA256withRSA");
+        privateSignature.initSign(privateKey);
+        privateSignature.update(plainText.getBytes(UTF_8));
+
+        byte[] signature = privateSignature.sign();
+
+        return Base64.getEncoder().encodeToString(signature);
+    }
+	
+	private boolean signingAndValidatingMock (String dataset) throws Exception {
+		
+		try {
+			KeyPair pair = generateKeyPair();
+			String  signature = sign(dataset, pair.getPrivate());
+			
+			log.info("SIGNATURE: " + signature);
+		
+			return (verify(dataset, signature, pair.getPublic()));
+		}
+		catch (Exception e) {
+			log.error("Exception: ", e);
+			throw new Exception (e);
+		} 
+		
+	}
+	
 	
 	
 }
