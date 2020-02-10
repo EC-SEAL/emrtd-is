@@ -24,5 +24,5 @@ jobs:
         fi
       script:
         - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-        - docker build -t mvjatos/seal-is:${CONTAINER_TAG} .
-        - docker push mvjatos/seal-is:${CONTAINER_TAG}
+        - docker build -t mvjatos/seal-emrtd-is:${CONTAINER_TAG} .
+        - docker push mvjatos/seal-emrtd-is:${CONTAINER_TAG}
