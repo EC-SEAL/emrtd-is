@@ -15,7 +15,7 @@ FROM openjdk:8-jdk-alpine
 MAINTAINER Atos
 VOLUME /tmp
 
-ADD ./target/seal-is-0.0.1.jar seal-emrtd-is.jar
+ADD ./target/emrtd-is-0.0.1.jar seal-emrtd-is.jar
 RUN sh -c 'touch /seal-emrtd-is.jar'
 ENV JAVA_OPTS=""
 ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar /seal-emrtd-is.jar" ]
