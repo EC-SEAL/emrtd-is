@@ -67,6 +67,7 @@ public class IsApiController implements IsApi {
     	        // msToken validated
         		
 // WHILE TESTING
+        			/*
         			DataSet myDataset = new DataSet();
         			myDataset.setId("DATASET__" + UUID.randomUUID().toString());     			
         			myDataset.setLoa("loa TEST");
@@ -90,9 +91,10 @@ public class IsApiController implements IsApi {
         			
        			
         			isLoadPostService.loadPost (sessionId, encodedDataset, smConn);
+        			*/
 // END TESTING
         			
-	        		//isLoadPostService.loadPost (sessionId, dataset, smConn);
+	        		isLoadPostService.loadPost (sessionId, dataset, smConn);
 	        		
 	                return new ResponseEntity<Void>(HttpStatus.OK);
         		}

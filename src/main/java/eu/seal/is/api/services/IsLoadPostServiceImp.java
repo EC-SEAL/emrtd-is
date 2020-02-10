@@ -46,7 +46,7 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 		
 		try {
 			// MOCKING
-			mocking (sessionId, smConn);
+			//mocking (sessionId, smConn);
 			
 			// dataset: #B64  $ref: '#/definitions/dataSet'
 			
@@ -78,7 +78,7 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 //				thePublicKey = ...
 			}
 			
-// WHILE TESTING 
+// TEMPORARY: pending of solving issue -signature and datastore- 
 			thePublicKey = generateKeyPair().getPublic();
 			
 			if (thePublicKey != null  &&

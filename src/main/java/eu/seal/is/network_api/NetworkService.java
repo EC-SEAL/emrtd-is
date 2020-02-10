@@ -11,7 +11,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 See README file for the full disclaimer information and LICENSE file for full license information in the project root.
 */
 package eu.seal.is.network_api;
-//package eu.esmo.httpSigs.lib.network;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
