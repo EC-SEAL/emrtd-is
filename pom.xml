@@ -59,6 +59,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
         </dependency>
+        
         <!--SpringFox dependencies -->
         <dependency>
             <groupId>io.springfox</groupId>
@@ -123,5 +124,7 @@
   			<artifactId>jaxb-api</artifactId>
   			<version>2.3.0</version>
 		</dependency>
+		
+		
     </dependencies>
 </project>
