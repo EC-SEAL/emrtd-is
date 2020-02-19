@@ -78,7 +78,7 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 //				thePublicKey = ...
 			}
 			
-// TEMPORARY: pending of solving issue -signature and datastore- 
+// TEMPORARY: pending of implementing https://github.com/EC-SEAL/emrtd-is/issues/2 
 			thePublicKey = generateKeyPair().getPublic();
 			
 			if (thePublicKey != null  &&
@@ -250,7 +250,6 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 	}
 	
 	
-	// https://gist.github.com/nielsutrecht/855f3bef0cf559d8d23e94e2aecd4ede
 	private static boolean verify(String plainText, String signature, PublicKey publicKey) throws Exception {
         Signature publicSignature = Signature.getInstance("SHA256withRSA");
         publicSignature.initVerify(publicKey);
