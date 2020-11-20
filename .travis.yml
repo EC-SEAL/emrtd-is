@@ -12,7 +12,7 @@ jobs:
         - mvn clean install
 
     - stage: VM
-      if: type != pull_request AND (branch = master OR branch = development OR branch = basics)
+      if: type != pull_request AND (branch = master OR branch = development OR branch = newSM)
       language: java
       before_script:
       - if [ $TRAVIS_BRANCH == "development" ]; then
