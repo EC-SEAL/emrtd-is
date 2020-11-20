@@ -45,7 +45,7 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
     
 		
 		try {
-			// MOCKING
+			// MOCKING TODO TO REVIEW IT (2020.11.20)
 			//mocking (sessionId, smConn);
 			
 			// dataset: #B64  $ref: '#/definitions/dataSet'
@@ -108,44 +108,47 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			
 			Object objAprequest = smConn.readVariable(sessionId, "apRequest");
 			Object objApmetadata = smConn.readVariable(sessionId, "apMetadata");
-			Object objDatastore = smConn.readVariable(sessionId, "dataStore");
+			//Object objDatastore = smConn.readDS(sessionId, "dataSet"); // Unnecessary
 			
 			
-			log.info("apRequest, apMetadata, dataStore just read.");
+			log.info("apRequest, apMetadata just read.");
 			
 			if (objAprequest != null) {
-			// TODO: Some checkings to do before updating: dataSet in the apRequest		
+			// TODO: Some checkings to do before updating: dataSet in the apRequest
 				
 				// Append dataset to dataStore
-				DataStore dataStore = new DataStore();
-				
-				List<DataSet> dsList = new ArrayList<DataSet> ();
-				String dataStoreString = (String) objDatastore;
-                if (!dataStoreString.isEmpty()) {
-                	dataStore = (new ObjectMapper()).readValue(objDatastore.toString(),DataStore.class);
-                    
-                	List <DataSet> OldDataSetList = dataStore.getClearData();  
-                	if (OldDataSetList!= null && !OldDataSetList.isEmpty())
-	                    for (DataSet dataSet: OldDataSetList)                 
-	                        dsList.add(dataSet);
-                    
-                } else {
-                    String dsId = UUID.randomUUID().toString();
-                    dataStore.setId(dsId);
-                }
-                
-                // Adding the dataset from the received parameter               
-                dsList.add(newDataSet);
-                dataStore.setClearData(dsList);
-                
-                log.info("new dataStore: " + dataStore.toString());
+//				DataStore dataStore = new DataStore();
+//				
+//				List<DataSet> dsList = new ArrayList<DataSet> ();
+//				String dataStoreString = (String) objDatastore;
+//                if (!dataStoreString.isEmpty()) {
+//                	dataStore = (new ObjectMapper()).readValue(objDatastore.toString(),DataStore.class);
+//                    
+//                	List <DataSet> OldDataSetList = dataStore.getClearData();  
+//                	if (OldDataSetList!= null && !OldDataSetList.isEmpty())
+//	                    for (DataSet dataSet: OldDataSetList)                 
+//	                        dsList.add(dataSet);
+//                    
+//                } else {
+//                    String dsId = UUID.randomUUID().toString();
+//                    dataStore.setId(dsId);
+//                }
+//                
+//                // Adding the dataset from the received parameter               
+//                dsList.add(newDataSet);
+//                dataStore.setClearData(dsList);
+//                
+//                log.info("new dataStore: " + dataStore.toString());
 				
 				try
 				{
 					// Update dataStore in the session
 					
-					ObjectMapper objMapper = new ObjectMapper();
-					smConn.updateVariable(sessionId,"dataStore",objMapper.writeValueAsString(dataStore));
+//					ObjectMapper objMapper = new ObjectMapper();
+//					smConn.updateVariable(sessionId,"dataStore",objMapper.writeValueAsString(dataStore));
+					
+					String objectId = "urn:mace:project-seal.eu:id:dataset:..."; // TODO TO ASK
+					smConn.updateDatastore(sessionId, objectId, newDataSet);
 					
 					log.info("dataStore just updated.");
 				}
@@ -171,6 +174,9 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 		}
 	}
 	
+	
+	// TODO
+	// TO CHECK with the new SM, and dataStoreObject and dataStoreObjectList
 	private void mocking (String sessionId, SessionManagerConnService smConn) throws Exception {
 		try {
 			

@@ -32,10 +32,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import eu.seal.is.model.EntityMetadata;
-//import eu.seal.is.model.domain.MsMetadataList;
+import eu.seal.is.model.RequestParameters;
+import eu.seal.is.model.ResponseCode;
 import eu.seal.is.model.SessionMngrResponse;
-import eu.seal.is.model.SessionMngrResponse.CodeEnum;
+import eu.seal.is.model.NewUpdateDataRequest;
 import eu.seal.is.cm_api.ConfMngrConnService;
 import eu.seal.is.network_api.NetworkServiceImpl;
 import eu.seal.is.params_api.KeyStoreService;
@@ -48,9 +51,6 @@ import eu.seal.is.model.UpdateDataRequest;
 public class SessionManagerConnServiceImp implements SessionManagerConnService
 {
 	private final String hostURL;
-	
-	
-	//TODO
 	private String sender = null;
 	
 	private static final Logger log = LoggerFactory.getLogger(SessionManagerConnServiceImp.class);
@@ -85,27 +85,16 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 		
 		hostURL = this.paramServ.getParam("SESSION_MANAGER_URL");
 		
-		// The receiver will be different: Persistence, Identity, IDderivation, ...
-		// ******************************
-		
-     
-		//TODO
-        //EntityMetadata myLGW = this.confMngrService.getConfiguration("LGW"); // APIGWCL or reading from an environment variable. TOASK
-		EntityMetadata myLGW = null;
-		if (myLGW != null)
-        	sender = myLGW.getMicroservice().get(0);
-        else {
-        	sender = "CLms001";
+		String thisCL = confMngrService.getMicroservicesByApiClass("IS").get(0).getMsId(); // The unique one
+		if (thisCL != null)
+		{
+        	sender = thisCL;
+		}
+        else
+        {
+        	sender = "emrtdISms_001";
         	log.error("HARDCODED sender! "+ sender);
 		}
-        
-        //TODO: to comment them after testing
-        System.out.println("hostURL: " + hostURL);
-        System.out.println("sender: "+ sender);
-        System.out.println("receiver wont be constant");
-        
-        
-        
 	}
 	
 	@Override
@@ -114,16 +103,7 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 										CertificateException, InvalidKeySpecException, IOException 
 	{
 		String service = "/sm/startSession";
-		
-//		if (httpSigService== null)
-//		{
-//			createHttpSigService();
-//		}
-//		if (network == null)
-//		{
-//			network = new NetworkServiceImpl(httpSigService);
-//		}
-		
+				
 		if (network == null)
 		{
 				network = new NetworkServiceImpl(keyStoreService);
@@ -133,10 +113,13 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 		
 		SessionMngrResponse smResponse = network.sendPostFormSMResponse(hostURL, service, urlParameters, 1);
 		
-		//System.out.println("SMresponse(startSession):" +smResponse.toString());
-		//System.out.println("sessionID:"+smResponse.getSessionData().getSessionId());
-		
-		return smResponse.getSessionData().getSessionId();
+		if (smResponse != null)
+		{
+//			System.out.println("SMresponse(startSession):" +smResponse.toString());
+//			System.out.println("sessionID:"+smResponse.getSessionData().getSessionId());
+			return smResponse.getSessionData().getSessionId();	
+		}
+		else return "";
 	}
 	
 	@Override
@@ -145,16 +128,7 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 			CertificateException, InvalidKeySpecException, IOException
 	{
 		String service = "/sm/generateToken";
-		
-//		if (httpSigService== null)
-//		{
-//			createHttpSigService();
-//		}
-//		if (network == null)
-//		{
-//			network = new NetworkServiceImpl(httpSigService);
-//		}
-		
+				
 		if (network == null)
 		{
 				network = new NetworkServiceImpl(keyStoreService);
@@ -163,19 +137,18 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
         urlParameters.add(new NameValuePair("sessionId",sessionId));
         urlParameters.add(new NameValuePair("sender", this.sender));   
         urlParameters.add(new NameValuePair("receiver", receiver)); 
-        
         urlParameters.add(new NameValuePair("data", "extraData"));
         
         SessionMngrResponse smResponse = network.sendGetSMResponse(hostURL, service, urlParameters, 1);
         
         String additionalData="";
         //System.out.println("SMresponse(generateToken):" +smResponse.toString());
-        if ( smResponse.getCode()==CodeEnum.NEW)
+        if ( smResponse.getCode()==ResponseCode.NEW)
         {
 	        //System.out.println( "addDAta:"+ smResponse.getAdditionalData());
 	        additionalData = smResponse.getAdditionalData();
 	    }
-        return additionalData; //Devuelve un token
+        return additionalData; // Returns a token
 	}
 	
 	@Override
@@ -185,16 +158,7 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 	{
 
 		String service = "/sm/validateToken";
-		
-//		if (httpSigService== null)
-//		{
-//			createHttpSigService();
-//		}
-//		if (network == null)
-//		{
-//			network = new NetworkServiceImpl(httpSigService);
-//		}
-		
+				
 		if (network == null)
 		{
 				network = new NetworkServiceImpl(keyStoreService);
@@ -207,20 +171,16 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 	    
 	    SessionMngrResponse smResponse = null;
 	   
-	    //System.out.println("Enviando validateToken :"+token);
-	    //response = network.sendGet(hostURL, service, urlParameters);
 	    smResponse = network.sendGetSMResponse(hostURL, service, urlParameters, 1);	    
 	    
-	    //log.info("validateToken smResponse:"+smResponse);
-	    
-	    if ( smResponse.getCode()==CodeEnum.OK)
+	    if ( smResponse.getCode()== ResponseCode.OK)
 	    {
 	    	sessionID = smResponse.getSessionData().getSessionId();
-	    	//System.out.println("SessionID:"+sessionID);
+//	    	System.out.println("SessionID:"+sessionID);
+//	    	System.out.println("validateToken smResponse:"+smResponse);
+			return sessionID; 
 	    }
-		// else   // Si hay error p.ej. JWT is blacklisted �q hacemos?
-		//System.out.println("validateToken smResponse:"+smResponse);
-		return sessionID; //devuelve un sessionId
+	    else return null;
 	}
 	
 	@Override
@@ -228,14 +188,6 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 	{
 		String service = "/sm/getSessionData";
 		HashMap<String, Object> sessionVbles= new HashMap<String, Object>();
-//		if (httpSigService== null)
-//		{
-//			createHttpSigService();
-//		}
-//		if (network == null)
-//		{
-//			network = new NetworkServiceImpl(httpSigService);
-//		}
 		
 		if (network == null)
 		{
@@ -246,8 +198,6 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 	    
 	    SessionMngrResponse smResponse = null;
 	    try {
-	    	//System.out.println("Enviando getSessionData");
-	    	//response = network.sendGet(hostURL, service, urlParameters);
 	    	smResponse = network.sendGetSMResponse(hostURL, service, urlParameters, 1);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -257,29 +207,19 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 			e.printStackTrace();
 		}
 	    //System.out.println("Response getSessionData:<"+smResponse.toString()+">");
-	    if (smResponse.getCode()==CodeEnum.OK)
+	    if (smResponse.getCode()==ResponseCode.OK)
 	    {
 	    	sessionVbles = (HashMap<String, Object>) smResponse.getSessionData().getSessionVariables();
+	    	return sessionVbles;
 	    }
-	    
-	    return sessionVbles;
-	}
-
-	
+	    else return null;
+	}	
 
 	@Override
 	public Object readVariable(String sessionId, String variableName) throws UnrecoverableKeyException, KeyStoreException, FileNotFoundException, NoSuchAlgorithmException, CertificateException, InvalidKeySpecException, IOException
 	{
 		String service = "/sm/getSessionData";
 		HashMap<String, Object> sessionVbles = new HashMap<String, Object>();
-//		if (httpSigService== null)
-//		{
-//			createHttpSigService();
-//		}
-//		if (network == null)
-//		{
-//			network = new NetworkServiceImpl(httpSigService);
-//		}
 		
 		if (network == null)
 		{
@@ -302,43 +242,96 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 			e.printStackTrace();
 		}
 	    //System.out.println("Response getSessionData:<"+smResponse.toString()+">");
-	    if (smResponse.getCode()==CodeEnum.OK)
+	    if (smResponse.getCode()==ResponseCode.OK)
 	    {
 	    	sessionVbles = (HashMap<String, Object>) smResponse.getSessionData().getSessionVariables();
 	    	
-	    	//System.out.println( "sessionVbles:"+sessionVbles.get("spRequest"));
-//	    	//AttributeSet spRequest = (AttributeSet) sessionVbles.get("spRequest");
-//	    	ObjectMapper objectMapper = new ObjectMapper();
-//	    	
-//	    	AttributeSet spRequest = objectMapper.readValue(sessionVbles.get("spRequest").toString(), AttributeSet.class);
-//	    	System.out.println("spRequest.issuer"+spRequest.getIssuer());
+		    return sessionVbles.get(variableName);
 	    }
+	    else return null;
+	}
+	
+
+	// Returns the list of dataSet/linkRequest objects from the DataStore.
+	// If type is null, returns the complete DataStore.
+	@Override
+	public Object readDS(String sessionId, String type) throws UnrecoverableKeyException, KeyStoreException, FileNotFoundException, NoSuchAlgorithmException, CertificateException, InvalidKeySpecException, IOException
+	{
+		//String service = "/sm/new/get";
+		String service = "/sm/new/search";
+		String contentType="application/json";
+		
+		Object sessionVble = new Object();
+		
+		if (network == null)
+		{
+				network = new NetworkServiceImpl(keyStoreService);
+		}
+//		List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
+//	    urlParameters.add(new NameValuePair("sessionId",sessionId));
+//	    urlParameters.add(new NameValuePair("type",type));
 	    
+	    RequestParameters requestParameters = new RequestParameters();
+        requestParameters.setSessionId(sessionId);
+        requestParameters.setType(type);
 	    
-	    return sessionVbles.get(variableName);
+	    SessionMngrResponse smResponse = null;
+	    try {
+	    	log.info("Sending new/search ...");
+	    	//smResponse = network.sendGetSMResponse(hostURL, service, urlParameters, 1);
+	    	smResponse = network.sendPostBodySMResponse(hostURL, /*"/sm/new/get"*/ service, requestParameters, contentType, 1);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    
+	    if (smResponse.getCode()== ResponseCode.OK)
+	    {
+	    	//sessionVbles = (HashMap<String, Object>) smResponse.getSessionData().getSessionVariables();
+	    	sessionVble = smResponse.getAdditionalData();
+	    	
+	    	log.info("DS (only "+ type + " : "+ sessionVble.toString());
+	    	return sessionVble;
+	    }
+	    else return null;
 	}
 
+	public String updateDatastore(String sessionId, String objectId, Object updateObject) throws IOException, NoSuchAlgorithmException {
+        ObjectMapper mapper = new ObjectMapper();
+        String stringifiedObject = mapper.writeValueAsString(updateObject);
+        
+        String contentType="application/json";
+        String service = "/sm/new/add";
+
+        NewUpdateDataRequest newReq = new NewUpdateDataRequest();
+        //newReq.setId(URLEncoder.encode(objectId, StandardCharsets.UTF_8.toString()));
+        newReq.setId(objectId);
+        newReq.setSessionId(sessionId);
+        newReq.setType("dataSet");
+        newReq.setData(stringifiedObject);
+        //String result = netServ.sendNewPostBody(hostURL, service, newReq, "application/json", 1);
+        String result = network.sendPostBody(hostURL, service, newReq, contentType, 1);
+            
+        log.info("Result" + result);          
+        log.info("session " + sessionId + " updated NEW API Session succesfully  with objectID" + objectId + "  with user attributes " + stringifiedObject);
+
+        return "ok";
+    }
 	
 	@Override
 	public void updateVariable(String sessionId, String varName, String varValue)
 			throws UnrecoverableKeyException, KeyStoreException, FileNotFoundException, NoSuchAlgorithmException,
 			CertificateException, InvalidKeySpecException, IOException {
 		String service = "/sm/updateSessionData";
-//		if (httpSigService== null)
-//		{
-//			createHttpSigService();
-//		}
-//		if (network == null)
-//		{
-//			network = new NetworkServiceImpl(httpSigService);
-//		}
 		
 		if (network == null)
 		{
 				network = new NetworkServiceImpl(keyStoreService);
 		}
 		
-//		ObjectMapper mapper = new ObjectMapper();
 		List<NameValuePair> urlParameters = new ArrayList<NameValuePair>();
 		urlParameters = new ArrayList<NameValuePair>();
         urlParameters.add(new NameValuePair("sessionId",sessionId));
@@ -347,13 +340,14 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
         updateDR.setSessionId(sessionId);
         updateDR.setVariableName(varName);
         updateDR.dataObject(varValue);
-//        String postBody = mapper.writeValueAsString(updateDR);
         String contentType="application/json";
 		
-        String response = network.sendPostBody(hostURL, service, updateDR, contentType, 1);
-		
-		
-        //System.out.println("Response updateSessionData"+response);
+        //String response = network.sendPostBody(hostURL, service, updateDR, contentType, 1);
+        SessionMngrResponse smResponse = null;
+        
+        smResponse = network.sendPostBodySMResponse(hostURL, service, updateDR, contentType, 1);
+        
+        log.info("Response updateSessionData"+smResponse);
 		
 	}
 
@@ -361,15 +355,6 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 	public void deleteSession(String sessionId) throws UnrecoverableKeyException, KeyStoreException, FileNotFoundException, NoSuchAlgorithmException, CertificateException, InvalidKeySpecException, IOException		// /sm/endSession
 	{
 		String service = "/sm/endSession";
-//		if (httpSigService== null)
-//		{
-//			createHttpSigService();
-//		}
-//		if (network == null)
-//		{
-//			network = new NetworkServiceImpl(httpSigService);
-//		}
-		
 		if (network == null)
 		{
 				network = new NetworkServiceImpl(keyStoreService);
@@ -379,8 +364,6 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 	    
 	    SessionMngrResponse smResponse = null;
 	    try {
-	    	//System.out.println("Enviando endSession");
-	    	//response = network.sendGet(hostURL, service, urlParameters);
 	    	smResponse = network.sendGetSMResponse(hostURL, service, urlParameters, 1);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
@@ -399,31 +382,18 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 			CertificateException, InvalidKeySpecException, IOException
 	{
 		String service = "/sm/getSession";
-//		if (httpSigService== null)
-//		{
-//			createHttpSigService();
-//		}
-//		if (network == null)
-//		{
-//			network = new NetworkServiceImpl(httpSigService);
-//		}
 		
 		if (network == null)
 		{
 				network = new NetworkServiceImpl(keyStoreService);
 		}
-//		ObjectMapper mapper = new ObjectMapper();
 		List<NameValuePair> requestParams = new ArrayList();
         requestParams.add(new NameValuePair("varName", varName));
         requestParams.add(new NameValuePair("varValue", varValue));
-		
-		
         
         SessionMngrResponse response= null;
 		try {
 			response = network.sendGetSMResponse(hostURL, service, requestParams, 1);
-			//System.out.println("Response getSession"+response);
-			
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -433,8 +403,6 @@ public class SessionManagerConnServiceImp implements SessionManagerConnService
 		}
 		
 		return (response.getSessionData() != null ? response.getSessionData().getSessionId() : null);
-        
-		
 	}
 	
 }

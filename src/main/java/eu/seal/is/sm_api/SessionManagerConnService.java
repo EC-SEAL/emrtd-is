@@ -40,6 +40,13 @@ public interface SessionManagerConnService
 																			  FileNotFoundException, NoSuchAlgorithmException, 
 																			  CertificateException, InvalidKeySpecException, IOException ;
 	
+	// Returns the list of "dataSet"/"linkRequest" objects from the DataStore.
+	// If type is null, returns the complete DataStore.
+	public Object readDS( String sessionId, String type) throws UnrecoverableKeyException, KeyStoreException, 
+		  														FileNotFoundException, NoSuchAlgorithmException, 
+		  														CertificateException, InvalidKeySpecException, IOException ;
+	
+	public String updateDatastore(String sessionId, String objectId, Object updateObject) throws IOException, NoSuchAlgorithmException;
 
 	public void deleteSession(String sessionId) throws UnrecoverableKeyException, KeyStoreException, 
 													   FileNotFoundException, NoSuchAlgorithmException, 
