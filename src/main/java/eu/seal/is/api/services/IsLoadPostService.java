@@ -18,6 +18,6 @@ import eu.seal.is.sm_api.SessionManagerConnService;
 
 public interface IsLoadPostService {
 	
-	void loadPost (String sessionId, String dataset, SessionManagerConnService smConn) throws Exception;
+	void loadPost (String sessionId, /*String dataset, */ SessionManagerConnService smConn) throws Exception;
 
 }

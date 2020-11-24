@@ -54,7 +54,7 @@ public class IsApiController implements IsApi {
     @Autowired
 	private IsLoadPostService isLoadPostService;
     
-    public ResponseEntity<Void> isLoadPost(@ApiParam(value = "The security token for ms to ms calls", required=true) @RequestParam(value="msToken", required=true)  String msToken,@ApiParam(value = "The data set to add", required=true) @RequestParam(value="dataset", required=true)  String dataset) {
+    public ResponseEntity<Void> isLoadPost(@ApiParam(value = "The security token for ms to ms calls", required=true) @RequestParam(value="msToken", required=true)  String msToken /*,@ApiParam(value = "The data set to add", required=true) @RequestParam(value="dataset", required=true)  String dataset */) {
         String accept = request.getHeader("Accept");
         
         if (accept != null) {
@@ -94,7 +94,7 @@ public class IsApiController implements IsApi {
         			*/
 // END TESTING
         			
-	        		isLoadPostService.loadPost (sessionId, dataset, smConn);
+	        		isLoadPostService.loadPost (sessionId, smConn);
 	        		
 	                return new ResponseEntity<Void>(HttpStatus.OK);
         		}
@@ -118,6 +118,10 @@ public class IsApiController implements IsApi {
         return new ResponseEntity<Void>(HttpStatus.NOT_IMPLEMENTED);
     }
     
+    /*
+     * FOR TESTING: Returns a token from SM
+     * @see eu.seal.is.api.IsApi#isToken()
+     */    
     @ApiOperation(value = "FOR TESTING: Returns a token from SM", nickname = "isToken", notes = "FOR TESTING: Returns a token from SM", tags={ "IdentitySource", })
     @ApiResponses(value = { 
         @ApiResponse(code = 200, message = "Request admitted"),

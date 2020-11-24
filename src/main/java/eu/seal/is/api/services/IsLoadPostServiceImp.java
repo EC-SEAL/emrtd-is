@@ -31,17 +31,24 @@ import eu.seal.is.sm_api.SessionManagerConnService;
 import eu.seal.is.model.DataSet;
 
 import java.security.*;
-import java.util.Base64;
+
 import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class IsLoadPostServiceImp implements IsLoadPostService{
 
 	
 	private static final Logger log = LoggerFactory.getLogger(IsLoadPostServiceImp.class);
+	private final String senderId = System.getenv("SENDER_ID") == null ? "emrtdISms_001": System.getenv("SENDER_ID");
+	
+	private final String issuerIdContent = System.getenv("ISSUER_ID") == null ? "This is the IssuerId" : System.getenv("ISSUER_ID");
+	private final String subjectIdContent = System.getenv("SUBJECT_ID") == null ? "This is the SubjectId" : System.getenv("SUBJECT_ID");
 	
 	@Override
-	public void loadPost (String sessionId, String dataset, SessionManagerConnService smConn) throws Exception {
+	public void loadPost (String sessionId, /*String dataset,*/ SessionManagerConnService smConn) throws Exception {
     
 		
 		try {
@@ -49,6 +56,7 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			//mocking (sessionId, smConn);
 			
 			// dataset: #B64  $ref: '#/definitions/dataSet'
+			String dataset = (String) smConn.readVariable(sessionId, "emrtdDataset");
 			
 			byte[] decodedBytes = Base64.getDecoder().decode(dataset);
 			String datasetString = new String(decodedBytes);
@@ -107,39 +115,13 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			// Reading apRequest, apMetadata, dataStore
 			
 			Object objAprequest = smConn.readVariable(sessionId, "apRequest");
-			Object objApmetadata = smConn.readVariable(sessionId, "apMetadata");
-			//Object objDatastore = smConn.readDS(sessionId, "dataSet"); // Unnecessary
+			Object objApmetadata = smConn.readVariable(sessionId, "apMetadata");			
 			
-			
-			log.info("apRequest, apMetadata just read.");
+			log.info("apRequest, apMetadata just read. "); // WHAT FOR??!! See next TODO
 			
 			if (objAprequest != null) {
 			// TODO: Some checkings to do before updating: dataSet in the apRequest
-				
-				// Append dataset to dataStore
-//				DataStore dataStore = new DataStore();
-//				
-//				List<DataSet> dsList = new ArrayList<DataSet> ();
-//				String dataStoreString = (String) objDatastore;
-//                if (!dataStoreString.isEmpty()) {
-//                	dataStore = (new ObjectMapper()).readValue(objDatastore.toString(),DataStore.class);
-//                    
-//                	List <DataSet> OldDataSetList = dataStore.getClearData();  
-//                	if (OldDataSetList!= null && !OldDataSetList.isEmpty())
-//	                    for (DataSet dataSet: OldDataSetList)                 
-//	                        dsList.add(dataSet);
-//                    
-//                } else {
-//                    String dsId = UUID.randomUUID().toString();
-//                    dataStore.setId(dsId);
-//                }
-//                
-//                // Adding the dataset from the received parameter               
-//                dsList.add(newDataSet);
-//                dataStore.setClearData(dsList);
-//                
-//                log.info("new dataStore: " + dataStore.toString());
-				
+								
 				try
 				{
 					// Update dataStore in the session
@@ -147,7 +129,45 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 //					ObjectMapper objMapper = new ObjectMapper();
 //					smConn.updateVariable(sessionId,"dataStore",objMapper.writeValueAsString(dataStore));
 					
-					String objectId = "urn:mace:project-seal.eu:id:dataset:..."; // TODO TO ASK
+					
+					//
+					// TEMPORARY
+					//
+					// Preparing the newDataSet to be store in the session dataStore
+					newDataSet.setIssuerId("issuerEntityId");   // Pointing to XXX   TODO
+					newDataSet.setSubjectId("subjectId");  // Pointing to YYY        TODO
+					
+					
+					List<AttributeType> attributes = new ArrayList<>();
+					attributes.addAll(newDataSet.getAttributes());
+					
+					AttributeType issuerAttr = new AttributeType();
+					issuerAttr.setName("issuerEntityId");
+					issuerAttr.setFriendlyName("issuerEntityId");
+					List<String> issuerValues = new ArrayList<String>();
+					issuerValues.add (issuerIdContent);
+					issuerAttr.setValues(issuerValues.toArray(new String[0]));
+					
+					attributes.add(issuerAttr);
+					
+					AttributeType subjectAttr = new AttributeType();
+					subjectAttr.setName("subjectId");
+					subjectAttr.setFriendlyName("subjectId");
+					List<String> issuerValues1 = new ArrayList<String>();
+					issuerValues1.add (subjectIdContent);
+					subjectAttr.setValues(issuerValues1.toArray(new String[0]));
+					
+					attributes.add(subjectAttr);
+							
+					newDataSet.setAttributes(attributes);
+					
+					String objectId = "urn:mace:project-seal.eu:id:dataset:"; 
+					objectId = objectId + 
+							URLEncoder.encode(senderId, StandardCharsets.UTF_8.toString()) + ":" + // TO ASK
+							//"LLoA" + ":" +
+							URLEncoder.encode(getSubjectIdLnk(newDataSet.getAttributes(), newDataSet.getSubjectId()), StandardCharsets.UTF_8.toString()) + ":" + 
+							URLEncoder.encode(getIssuerIdLnk(newDataSet.getAttributes(), newDataSet.getIssuerId()), StandardCharsets.UTF_8.toString());
+					
 					smConn.updateDatastore(sessionId, objectId, newDataSet);
 					
 					log.info("dataStore just updated.");
@@ -304,7 +324,37 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 		
 	}
 	
-	
+	  private String getSubjectIdLnk(List<AttributeType> attributes, String subjectId) {
+		  String theSubjectId = null;
+		  
+		  for (AttributeType attr: attributes) {
+			  if ((attr.getFriendlyName() != null) && 
+				 (attr.getFriendlyName().contains (subjectId))){
+				  
+				  theSubjectId = attr.getValues().get(0);
+				  break;
+			  }
+		  }
+		  
+		  return (theSubjectId != null ? theSubjectId : subjectId);
+	  
+	  }
+	  
+		private String getIssuerIdLnk(List<AttributeType> attributes, String issuerId) {
+		  String theIssuerId = null;
+		  
+		  for (AttributeType attr: attributes) {
+			  if ((attr.getFriendlyName() != null) && 
+				 (attr.getFriendlyName().contains (issuerId))){
+				  
+				  theIssuerId = attr.getValues().get(0);
+				  break;
+			  }
+		  }
+		  
+		  return (theIssuerId != null ? theIssuerId : issuerId);
+		
+		}
 	
 }
 

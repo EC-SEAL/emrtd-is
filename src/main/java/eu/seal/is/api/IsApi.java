@@ -43,7 +43,7 @@ public interface IsApi {
     @RequestMapping(value = "/is/load",
         consumes = { "application/x-www-form-urlencoded" },
         method = RequestMethod.POST)
-    ResponseEntity<Void> isLoadPost(@ApiParam(value = "The security token for ms to ms calls", required=true) @RequestParam(value="msToken", required=true)  String msToken,@ApiParam(value = "The data set to add", required=true) @RequestParam(value="dataset", required=true)  String dataset);
+    ResponseEntity<Void> isLoadPost(@ApiParam(value = "The security token for ms to ms calls", required=true) @RequestParam(value="msToken", required=true)  String msToken /*,@ApiParam(value = "The data set to add", required=true) @RequestParam(value="dataset", required=true)  String dataset*/);
 
 
     @ApiOperation(value = "Pass a data query request object to be handled by an identity module ms.", nickname = "isQueryPost", notes = "Process a Data request", tags={ "IdentitySource", })
