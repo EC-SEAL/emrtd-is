@@ -44,8 +44,8 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 	private static final Logger log = LoggerFactory.getLogger(IsLoadPostServiceImp.class);
 	private final String senderId = System.getenv("SENDER_ID") == null ? "emrtdISms_001": System.getenv("SENDER_ID");
 	
-	private final String issuerIdContent = System.getenv("ISSUER_ID") == null ? "This is the IssuerId" : System.getenv("ISSUER_ID");
-	private final String subjectIdContent = System.getenv("SUBJECT_ID") == null ? "This is the SubjectId" : System.getenv("SUBJECT_ID");
+	private final String IssuingStateContent = "This is an issuing state";
+	private final String DocumentNumberContent = "This is a doc number";
 	
 	@Override
 	public void loadPost (String sessionId, /*String dataset,*/ SessionManagerConnService smConn) throws Exception {
@@ -130,32 +130,32 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 //					smConn.updateVariable(sessionId,"dataStore",objMapper.writeValueAsString(dataStore));
 					
 					
-					//
+					// *****
 					// TEMPORARY
-					//
+					// *****
 					// Preparing the newDataSet to be store in the session dataStore
-					newDataSet.setIssuerId("issuerEntityId");   // Pointing to XXX   TODO
-					newDataSet.setSubjectId("subjectId");  // Pointing to YYY        TODO
+					newDataSet.setIssuerId("IssuingState");   // Pointing to XXX   TODO
+					newDataSet.setSubjectId("DocumentNumber");  // Pointing to YYY        TODO
 					
 					
 					List<AttributeType> attributes = new ArrayList<>();
 					attributes.addAll(newDataSet.getAttributes());
 					
 					AttributeType issuerAttr = new AttributeType();
-					issuerAttr.setName("issuerEntityId");
-					issuerAttr.setFriendlyName("issuerEntityId");
+					issuerAttr.setName("IssuingState");
+					issuerAttr.setFriendlyName("IssuingState");
 					List<String> issuerValues = new ArrayList<String>();
-					issuerValues.add (issuerIdContent);
-					issuerAttr.setValues(issuerValues.toArray(new String[0]));
+					issuerValues.add (IssuingStateContent);
+					issuerAttr.setValues(issuerValues);
 					
 					attributes.add(issuerAttr);
 					
 					AttributeType subjectAttr = new AttributeType();
-					subjectAttr.setName("subjectId");
-					subjectAttr.setFriendlyName("subjectId");
+					subjectAttr.setName("DocumentNumber");
+					subjectAttr.setFriendlyName("DocumentNumber");
 					List<String> issuerValues1 = new ArrayList<String>();
-					issuerValues1.add (subjectIdContent);
-					subjectAttr.setValues(issuerValues1.toArray(new String[0]));
+					issuerValues1.add (DocumentNumberContent);
+					subjectAttr.setValues(issuerValues1);
 					
 					attributes.add(subjectAttr);
 							
