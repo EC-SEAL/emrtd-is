@@ -32,7 +32,7 @@ server:
   #key-password: ${KEY_PASS}
   #signing-secret: ${SIGNING_SECRET}
   ssl:
-    enabled: false
+    enabled: true
     key-store: ${SSL_KEYSTORE_PATH}
     key-store-password: ${SSL_STORE_PASS}
     key-password: ${SSL_KEY_PASS}
