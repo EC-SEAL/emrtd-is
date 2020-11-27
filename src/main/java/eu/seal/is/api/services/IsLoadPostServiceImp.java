@@ -52,8 +52,6 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
     
 		
 		try {
-			// MOCKING TODO TO REVIEW IT (2020.11.20)
-			//mocking (sessionId, smConn);
 			
 			// dataset: #B64  $ref: '#/definitions/dataSet'
 			String dataset = (String) smConn.readVariable(sessionId, "emrtdDataset");
@@ -104,7 +102,7 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 					if (!signingAndValidatingMock (datasetString))  // SIGNATURE MOCKED
 						throw new Exception("Invalid signature");
 				} else
-					throw new Exception("Sign algorithm not implemented.");
+					throw new Exception("Signing algorithm not implemented.");
 				
 			}
 			else
@@ -192,87 +190,6 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			log.info("Exception: ", e);
 			throw new Exception (e);
 		}
-	}
-	
-	
-	// TODO
-	// TO CHECK with the new SM, and dataStoreObject and dataStoreObjectList
-	private void mocking (String sessionId, SessionManagerConnService smConn) throws Exception {
-		try {
-			
-		
-		AttributeSet myApRequest = new AttributeSet();
-		myApRequest.setId( "AP_" + UUID.randomUUID().toString());
-		myApRequest.setType(AttributeSet.TypeEnum.REQUEST);
-		myApRequest.setIssuer( "ms001");
-		myApRequest.setRecipient("ms002");
-		
-		List<AttributeType> myAttributes =  new ArrayList<AttributeType>();
-		AttributeType anAttribute = new AttributeType ();
-		//anAttribute.setEncoding("plain");
-		anAttribute.setFriendlyName("FirstAttr");
-		anAttribute.setName("FirstAttr");
-		//anAttribute.setLanguage(null);
-		//anAttribute.setIsMandatory(true);
-		//anAttribute.addValuesItem("JOHN");
-		myAttributes.add(0, anAttribute);
-		
-		AttributeType anAttribute2 = new AttributeType ();
-		//anAttribute.setEncoding("plain");
-		anAttribute2.setFriendlyName("SecondAttr");
-		anAttribute2.setName("SecondAttr");
-		//anAttribute.setLanguage(null);
-		//anAttribute.setIsMandatory(true);
-		//anAttribute.addValuesItem("ES/NO/1234ABCD");
-		myAttributes.add(1, anAttribute2);
-		
-		myApRequest.setAttributes(myAttributes);
-		
-		ObjectMapper objMapper = new ObjectMapper();
-		smConn.updateVariable(sessionId, "apRequest", objMapper.writeValueAsString(myApRequest));
-		
-		EntityMetadata apMetadata = new EntityMetadata();
-		apMetadata.setEntityId("https://eMRTDtest/metadata");
-		apMetadata.setDefaultDisplayName("eMRTDtest");
-		
-		ObjectMapper objMapper2 = new ObjectMapper();
-		smConn.updateVariable(sessionId, "apMetadata", objMapper2.writeValueAsString(apMetadata));
-		
-		// Creating an empty datastore object
-		DataStore datastore = new DataStore();
-		datastore.setId("DS_" +UUID.randomUUID().toString());
-		datastore.setEncryptedData(null);
-		datastore.setEncryptionAlgorithm(null);
-		datastore.setSignature(null);
-		datastore.setSignatureAlgorithm(null);	
-		
-		
-		DataSet dataSet = new DataSet();
-        dataSet.setId("DATASET__" + UUID.randomUUID().toString());
-        dataSet.setLoa("loa loa");
-        dataSet.setIssued("issued issued");
-        dataSet.setIssuerId("eIDAS issuer id");
-        dataSet.setType("eIDAS type");
-        Date date = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("EEE, d MMM YYYY HH:mm:ss z", Locale.US);
-        formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
-        String nowDate = formatter.format(date);
-        dataSet.setIssued(nowDate);
-        List<DataSet> dsList = new ArrayList<DataSet> ();
-        dsList.add(dataSet);
-        datastore.setClearData(dsList);
-		
-		ObjectMapper objDatastore3 = new ObjectMapper();
-		smConn.updateVariable(sessionId, "dataStore",objDatastore3.writeValueAsString(datastore));
-		
-		log.info("apRequest, apMetadata, dataStore just MOCKED.");
-		
-		}
-		catch (Exception e) {
-			log.error("Exception: ", e);
-			throw new Exception (e);
-		}
-		
 	}
 	
 	
