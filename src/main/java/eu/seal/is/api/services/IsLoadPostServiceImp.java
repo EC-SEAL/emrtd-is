@@ -17,6 +17,9 @@ package eu.seal.is.api.services;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ import eu.seal.is.model.AttributeSet;
 import eu.seal.is.model.AttributeType;
 import eu.seal.is.model.DataStore;
 import eu.seal.is.model.EntityMetadata;
+import eu.seal.is.model.SignedDataSet;
 import eu.seal.is.sm_api.SessionManagerConnService;
 import eu.seal.is.model.DataSet;
 
@@ -43,15 +47,18 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 	
 	private static final Logger log = LoggerFactory.getLogger(IsLoadPostServiceImp.class);
 	private final String senderId = System.getenv("SENDER_ID") == null ? "emrtdISms_001": System.getenv("SENDER_ID");
+	private final String secretKey = System.getenv("SECRET_KEY")== null ? "12345678" : System.getenv("SECRET_KEY");
 	
-	private final String IssuingStateContent = "This is an issuing state";
-	private final String DocumentNumberContent = "This is a doc number";
+//	private final String IssuingStateContent = "This is an issuing state";
+//	private final String DocumentNumberContent = "This is a doc number";
 	
 	@Override
 	public void loadPost (String sessionId, /*String dataset,*/ SessionManagerConnService smConn) throws Exception {
     
 		
 		try {
+			
+			/* Not more
 			
 			// dataset: #B64  $ref: '#/definitions/dataSet'
 			String dataset = (String) smConn.readVariable(sessionId, "emrtdDataset");
@@ -108,7 +115,37 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			else
 				throw new Exception("Missing signature information.");
 			
-						
+			*/
+			
+			Object objDataSet = smConn.readVariable(sessionId, "emrtdDataset");
+			SignedDataSet signedDataSet = (new ObjectMapper()).readValue(objDataSet.toString(), SignedDataSet.class);
+			
+			byte[] decodedBytes = Base64.getDecoder().decode(signedDataSet.getDataSetSerialised());
+			
+			//TODO: check the signature
+			byte[] hmacSha256 = null;
+		    try {
+		      Mac mac = Mac.getInstance("HmacSHA256");
+		      SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
+		      mac.init(secretKeySpec);
+		      hmacSha256 = mac.doFinal(decodedBytes);
+		    } catch (Exception e) {
+		      throw new RuntimeException("Failed to calculate hmac-sha256", e);
+		    }
+		    
+		    String myCheck = new String(hmacSha256);
+		    if (!myCheck.equals(signedDataSet.getSignature())) {  // NOT SO SIMPLE!!
+		    	log.error("Signature mismatching!!!");
+				throw new Exception ("Signature mismatching!!!");
+		    }
+		    	
+			
+			
+			String datasetString = new String(decodedBytes);
+			
+			log.info("Dataset to be loaded: " + datasetString );
+			DataSet newDataSet = (new ObjectMapper()).readValue(datasetString, DataSet.class);
+			
 			// Get sessionData from SM
 			// Reading apRequest, apMetadata, dataStore
 			
@@ -132,32 +169,32 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 					// TEMPORARY
 					// *****
 					// Preparing the newDataSet to be store in the session dataStore
-					newDataSet.setIssuerId("IssuingState");   // Pointing to XXX   TODO
-					newDataSet.setSubjectId("DocumentNumber");  // Pointing to YYY        TODO
-					
-					
-					List<AttributeType> attributes = new ArrayList<>();
-					attributes.addAll(newDataSet.getAttributes());
-					
-					AttributeType issuerAttr = new AttributeType();
-					issuerAttr.setName("IssuingState");
-					issuerAttr.setFriendlyName("IssuingState");
-					List<String> issuerValues = new ArrayList<String>();
-					issuerValues.add (IssuingStateContent);
-					issuerAttr.setValues(issuerValues);
-					
-					attributes.add(issuerAttr);
-					
-					AttributeType subjectAttr = new AttributeType();
-					subjectAttr.setName("DocumentNumber");
-					subjectAttr.setFriendlyName("DocumentNumber");
-					List<String> issuerValues1 = new ArrayList<String>();
-					issuerValues1.add (DocumentNumberContent);
-					subjectAttr.setValues(issuerValues1);
-					
-					attributes.add(subjectAttr);
-							
-					newDataSet.setAttributes(attributes);
+//					newDataSet.setIssuerId("IssuingState");   // Pointing to XXX   TODO
+//					newDataSet.setSubjectId("DocumentNumber");  // Pointing to YYY        TODO
+//					
+//					
+//					List<AttributeType> attributes = new ArrayList<>();
+//					attributes.addAll(newDataSet.getAttributes());
+//					
+//					AttributeType issuerAttr = new AttributeType();
+//					issuerAttr.setName("IssuingState");
+//					issuerAttr.setFriendlyName("IssuingState");
+//					List<String> issuerValues = new ArrayList<String>();
+//					issuerValues.add (IssuingStateContent);
+//					issuerAttr.setValues(issuerValues);
+//					
+//					attributes.add(issuerAttr);
+//					
+//					AttributeType subjectAttr = new AttributeType();
+//					subjectAttr.setName("DocumentNumber");
+//					subjectAttr.setFriendlyName("DocumentNumber");
+//					List<String> issuerValues1 = new ArrayList<String>();
+//					issuerValues1.add (DocumentNumberContent);
+//					subjectAttr.setValues(issuerValues1);
+//					
+//					attributes.add(subjectAttr);
+//							
+//					newDataSet.setAttributes(attributes);
 					
 					String objectId = "urn:mace:project-seal.eu:id:dataset:"; 
 					objectId = objectId + 
