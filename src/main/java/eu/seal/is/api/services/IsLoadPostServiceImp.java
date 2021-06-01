@@ -118,6 +118,12 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			*/
 			
 			Object objDataSet = smConn.readVariable(sessionId, "emrtdDataset");
+			
+			if (objDataSet ==  null) {
+				log.error("emrtdDataset is null?!");
+				throw new Exception ("emrtdDataset is null?!");
+			}
+			
 			SignedDataSet signedDataSet = (new ObjectMapper()).readValue(objDataSet.toString(), SignedDataSet.class);
 			
 			byte[] decodedBytes = Base64.getDecoder().decode(signedDataSet.getDataSetSerialised());
