@@ -20,6 +20,7 @@ import java.util.*;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -139,14 +140,14 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 		      throw new RuntimeException("Failed to calculate hmac-sha256", e);
 		    }
 		    
-		    String myCheck = new String(hmacSha256);
-		    if (!myCheck.equals(signedDataSet.getSignature())) {  // NOT SO SIMPLE!!
+		    String myCheck = Hex.encodeHexString( hmacSha256);
+		    log.debug ("myCheck: " + myCheck);
+		    log.debug ("signedDataSet.getSignature(): " + signedDataSet.getSignature());
+		    if (!myCheck.equals(signedDataSet.getSignature())) {  
 		    	log.error("Signature mismatching!!!");
 				//throw new Exception ("Signature mismatching!!!");
 		    }
 		    	
-			
-			
 			String datasetString = new String(decodedBytes);
 			
 			log.info("Dataset to be loaded: " + datasetString );
