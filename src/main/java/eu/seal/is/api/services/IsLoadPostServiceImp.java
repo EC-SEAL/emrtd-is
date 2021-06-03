@@ -164,7 +164,7 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			
 			log.info("apRequest, apMetadata just read. "); // WHAT FOR??!! See next TODO
 			
-			if (objAprequest != null) {
+			//if (objAprequest != null) {
 			// TODO: Some checkings to do before updating: dataSet in the apRequest
 								
 				try
@@ -223,13 +223,13 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 					throw new Exception (ex);				
 				}	
 			
-			}
-			else {
-			
-				log.info("Invalid session: " + sessionId);
-				throw new Exception ("Invalid session");
-				
-			}
+//			}
+//			else {
+//			
+//				log.info("Invalid session: " + sessionId);
+//				throw new Exception ("Invalid session");
+//				
+//			}
 			
 		}
 		catch (Exception e) {
