@@ -143,6 +143,9 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 		    String myCheck = Hex.encodeHexString( hmacSha256);
 		    log.debug ("myCheck: " + myCheck);
 		    log.debug ("signedDataSet.getSignature(): " + signedDataSet.getSignature());
+		    log.info ("myCheck: " + myCheck);
+		    log.info ("signedDataSet.getSignature(): " + signedDataSet.getSignature());
+		    
 		    if (!myCheck.equals(signedDataSet.getSignature())) {  
 		    	log.error("Signature mismatching!!!");
 				//throw new Exception ("Signature mismatching!!!");
