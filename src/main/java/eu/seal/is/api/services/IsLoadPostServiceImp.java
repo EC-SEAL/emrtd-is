@@ -127,7 +127,7 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 			
 			SignedDataSet signedDataSet = (new ObjectMapper()).readValue(objDataSet.toString(), SignedDataSet.class);
 			
-			byte[] decodedBytes = Base64.getDecoder().decode(signedDataSet.getDataSetSerialised());
+			byte[] decodedBytes0 = signedDataSet.getDataSetSerialised().getBytes(StandardCharsets.UTF_8);
 			
 			// Check the signature
 			byte[] hmacSha256 = null;
@@ -135,7 +135,7 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 		      Mac mac = Mac.getInstance("HmacSHA256");
 		      SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(), "HmacSHA256");
 		      mac.init(secretKeySpec);
-		      hmacSha256 = mac.doFinal(decodedBytes);
+		      hmacSha256 = mac.doFinal(decodedBytes0);
 		    } catch (Exception e) {
 		      throw new RuntimeException("Failed to calculate hmac-sha256", e);
 		    }
@@ -150,7 +150,8 @@ public class IsLoadPostServiceImp implements IsLoadPostService{
 		    	log.error("Signature mismatching!!!");
 				//throw new Exception ("Signature mismatching!!!");
 		    }
-		    	
+		    
+		    byte[] decodedBytes = Base64.getDecoder().decode(signedDataSet.getDataSetSerialised());
 			String datasetString = new String(decodedBytes);
 			
 			log.info("Dataset to be loaded: " + datasetString );
